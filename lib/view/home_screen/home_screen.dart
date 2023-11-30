@@ -1,7 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_application_20/model/image_model.dart';
 import 'package:flutter_application_20/view/gridview/gridview.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,7 +12,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<XFile> multiimagelist = [];
+  var box = Hive.box<ImageModel>('imageBox');
+  List<ImageModel> multiimagelist = [];
+  @override
+  void initState() {
+    multiimagelist = box.values.toList();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +52,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               List<XFile> images =
                                   await picker.pickMultiImage();
 
-                              multiimagelist.addAll(images);
-                              setState(() {});
+                              for (var image in images) {
+                                final bytes = await image.readAsBytes();
+                                final imageModel =
+                                    ImageModel(imageBytes: bytes);
+                                box.add(imageModel);
+                              }
+                              setState(() {
+                                multiimagelist = box.values.toList();
+                              });
+
                               Navigator.pop(context);
                             },
                             child: Row(
